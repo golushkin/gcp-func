@@ -1,5 +1,13 @@
-const { getCollectionData, updateUserData, addTokenInfo } = require("../services/firestore");
-const { getUsersData, createConnection, getConnectionUrl } = require("../services/people");
+const {
+  getCollectionData,
+  updateUserData,
+  addTokenInfo,
+} = require("../services/firestore");
+const {
+  getUsersData,
+  createConnection,
+  getConnectionUrl,
+} = require("../services/people");
 const { collectionNames } = require("../consts/common");
 
 const handleUserData = async (req, res) => {
@@ -18,25 +26,27 @@ const handleUserData = async (req, res) => {
 const getUserTokens = async (req, res) => {
   const { code } = req.query;
 
-  const auth = createConnection();
-
-  if (code) {    
-      const data = await auth.getToken(code);
-      const tokens = data.tokens;
-      const tokenInfo = await auth.getTokenInfo(tokens.access_token)
-      console.log(tokenInfo)
-      
-      await addTokenInfo(tokenInfo.email, tokens)
-
-      res.sendStatus(200)
-    
-  } else {
-   
-    res.redirect(getConnectionUrl(auth))
+  if (!code) {
+    throw new Error("Invalid query params")
   }
+
+  const auth = createConnection();
+  const data = await auth.getToken(code);
+  const tokens = data.tokens;
+  const tokenInfo = await auth.getTokenInfo(tokens.access_token);
+
+  await addTokenInfo(tokenInfo.email, tokens);
+
+  res.sendStatus(200);
+};
+
+const getAuthUrl = async (req, res) => {
+  const auth = createConnection();
+  res.redirect(getConnectionUrl(auth));
 };
 
 module.exports = {
   handleUserData,
   getUserTokens,
+  getAuthUrl,
 };
