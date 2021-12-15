@@ -26,6 +26,35 @@ const getUsersTokens = async () => {
   return collectionData;
 };
 
+const addTokenInfo = async (email, tokens) => {
+  let collection = getCollectionRef(collectionNames.usersTokens);
+  const collectionData = [];
+
+  try {
+
+    const querySnapshot = await collection.where('email', '==', email).get();
+
+    if (!querySnapshot.empty) {
+      querySnapshot.docs.forEach((documentSnapshot) => {
+        if (documentSnapshot.exists) {
+          collectionData.push(documentSnapshot)
+        }
+      });
+    }
+    else {
+      await collection.add({email, ...tokens})
+    }
+
+    if (collectionData.length) {
+      await Promise.allSettled(collectionData.map(collection => collection.ref.update({email, ...tokens})))
+    }
+  } catch (error) {
+    console.log("error", error);
+  }
+
+  return collectionData;
+};
+
 const getCollectionData = async (collectionName) => {
   let query = getCollectionRef(collectionName);
   const collectionData = [];
@@ -49,7 +78,7 @@ const getCollectionData = async (collectionName) => {
 
 const updateUserData = async (newUsersInfo, oldUsersInfo) => {
   const collectionRef = getCollectionRef(collectionNames.usersData);
-  const handledOldUsers = {}
+  const handledOldUsers = {};
 
   const result = await Promise.allSettled(
     newUsersInfo.map(async (newInfo) => {
@@ -69,16 +98,17 @@ const updateUserData = async (newUsersInfo, oldUsersInfo) => {
   if (Object.keys(handledOldUsers).length !== oldUsersInfo) {
     await Promise.allSettled(
       oldUsersInfo
-      .filter(oldData => !handledOldUsers[oldData.data().name])
-      .map((oldData) => oldData.ref.update({isStale: true}))
-      )
+        .filter((oldData) => !handledOldUsers[oldData.data().name])
+        .map((oldData) => oldData.ref.update({ isStale: true }))
+    );
   }
 
-  return result
+  return result;
 };
 
 module.exports = {
   getCollectionData,
   getUsersTokens,
   updateUserData,
+  addTokenInfo
 };

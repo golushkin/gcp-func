@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const {
-  googleConfig
+  googleConfig,
+  defaultScope
 } = require("../consts/common");
 const { errors } = require("../consts/errors");
 const { serializeUsersData } = require("../utils/helper");
@@ -12,6 +13,14 @@ function createConnection() {
     googleConfig.clientSecret,
     googleConfig.redirect
   );
+}
+
+function getConnectionUrl(auth) {
+  return auth.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent',
+    scope: defaultScope
+  });
 }
 
 function getGooglePeopleApi(auth) {
@@ -66,5 +75,8 @@ const getUsersData = async () => {
 
 
 module.exports = {
-    getUsersData
+    getUsersData,
+    createConnection,
+    getConnectionUrl,
+    getGooglePeopleApi
 };

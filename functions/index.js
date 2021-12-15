@@ -1,10 +1,15 @@
 require('dotenv').config()
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { handleUserData } = require('./controllers/user')
+const { handleUserData, getUserTokens } = require('./controllers/user')
 
 admin.initializeApp();
 
-exports.addMessage = functions.https.onRequest(handleUserData);
+exports.refreshUsersData = functions.https.onRequest(handleUserData);
 
-// exports.addMessageSchedule = functions.pubsub.schedule('0 1 * * *').onRun(handleUserData);
+exports.getUserTokens = functions.https.onRequest(getUserTokens);
+
+exports.refreshUsersDataSchedule = functions.pubsub.schedule('every day 01:00').onRun(() => {
+    console.log('pubsub')
+    return null
+});
